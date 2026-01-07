@@ -16,8 +16,16 @@ public class UnitState_Move : IUnitState
 
     public void Update(Unit unit)
     {
+        // 🛡️ Attack Move Check: أثناء الحركة، افحص إذا ظهر عدو
+        if (unit.FindClosestEnemy())
+        {
+            unit.stateMachine.ChangeState(new UnitState_Chase(unit));
+            return;
+        }
+
         // Check if we reached the destination
-        if (unit.agent != null && !unit.agent.pathPending)
+        // 🛡️ الحماية الكاملة: لا تسأل الـ Agent إلا إذا كان جاهزاً وعلى الأرض
+        if (unit.IsAgentReady && !unit.agent.pathPending)
         {
             if (unit.agent.remainingDistance <= unit.agent.stoppingDistance)
             {

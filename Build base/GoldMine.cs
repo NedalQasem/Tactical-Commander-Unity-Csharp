@@ -32,15 +32,24 @@ public class GoldMine : BuildingBase
 
     void GenerateGold()
     {
-        if (ResourceManager.Instance != null)
+        // 🛑 فقط إذا كان المنجم تابعاً للاعب، أضف الذهب للخزينة
+        if (team == Unit.Team.Player)
         {
-            ResourceManager.Instance.AddGold(goldAmount);
-
-            if (floatingTextPrefab != null)
+            if (ResourceManager.Instance != null)
             {
-                Vector3 spawnPos = transform.position + Vector3.up * 2.5f; 
-                Instantiate(floatingTextPrefab, spawnPos, Quaternion.identity);
+                ResourceManager.Instance.AddGold(goldAmount);
+
+                if (floatingTextPrefab != null)
+                {
+                    Vector3 spawnPos = transform.position + Vector3.up * 2.5f; 
+                    Instantiate(floatingTextPrefab, spawnPos, Quaternion.identity);
+                }
             }
+        }
+        else
+        {
+            // 💰 منطق العدو: العدو يحصل على ذهبه من خلال سكربت EnemyAIController مباشرة
+            // (أو يمكننا البحث عن الكنترولر وإضافة الذهب له هنا مستقبلاً)
         }
     }
 }

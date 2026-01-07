@@ -7,4 +7,5 @@ public interface IDamageable
     void TakeDamage(int amount);
     bool IsAlive();
     float GetRadius(); // لحساب المسافة بشكل أدق (للمباني الكبيرة)
+    Collider GetCollider(); // 🛡️ للتعامل مع "سطح" المبنى وليس المركزه
 }

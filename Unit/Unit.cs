@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 using UnityEngine.UI;
 
 public class Unit : MonoBehaviour, IDamageable
@@ -17,41 +18,68 @@ public class Unit : MonoBehaviour, IDamageable
     // Runtime Stats
     [HideInInspector] public float currentHP;
     [HideInInspector] public NavMeshAgent agent;
+    [HideInInspector] public UnitAnimation unitAnimation;
+
+    [Header("Combat Settings")]
+    public Transform firePoint;
+    public float visionRange = 10f;
+    public IDamageable target;
+    public UnitStateMachine stateMachine;
 
     public string unitName => data != null ? data.unitName : "Unknown Unit";
     public int maxHP => data != null ? data.maxHealth : 100;
+    
+    // 🛡️ Helper Property for Safe Agent Access
+    public bool IsAgentReady => agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        unitAnimation = GetComponent<UnitAnimation>();
+        if (unitAnimation == null) unitAnimation = gameObject.AddComponent<UnitAnimation>();
+        
         if (data != null)
         {
             currentHP = data.maxHealth;
             if (agent != null) agent.speed = data.moveSpeed;
         }
-        else
-        {
-            currentHP = 100;
-        }
 
         if (selectionCircle != null) selectionCircle.SetActive(false);
         if (healthBarObject != null) healthBarObject.SetActive(false);
+    }
 
-        // Initialize State Machine here to be ready for immediate commands
+    IEnumerator Start()
+    {
+        // Wait one frame to ensure NavMeshAgent is placed on the NavMesh
+        yield return null;
+
+        if (data != null) currentHP = data.maxHealth;
+        
+        // Initialize State Machine safely
         stateMachine = new UnitStateMachine(this);
         stateMachine.Initialize(new UnitState_Idle());
     }
 
+    private void Update()
+    {
+        if (stateMachine != null) stateMachine.Update();
+    }
+
+    // --- Selection Logic ---
+    private bool isSelected = false;
+
     public void OnSelect()
     {
+        isSelected = true;
         if (selectionCircle != null) selectionCircle.SetActive(true);
-        if (healthBarObject != null) healthBarObject.SetActive(true);
+        UpdateHealthBarVisibility();
     }
 
     public void OnDeselect()
     {
+        isSelected = false;
         if (selectionCircle != null) selectionCircle.SetActive(false);
-        if (healthBarObject != null) healthBarObject.SetActive(false);
+        UpdateHealthBarVisibility();
     }
 
     public void SetSelected(bool selected)
@@ -60,21 +88,19 @@ public class Unit : MonoBehaviour, IDamageable
         else OnDeselect();
     }
 
-    // State Machine
-    public UnitStateMachine stateMachine;
-    
-    // Combat
-    public IDamageable target;
-    public float visionRange = 10f; // مدى الرؤية (أوسع من مدى الهجوم)
-
-    private void Update()
+    void UpdateHealthBarVisibility()
     {
-        stateMachine.Update();
+        if (healthBarObject != null)
+        {
+            bool shouldShow = isSelected || (currentHP < maxHP && currentHP > 0);
+            healthBarObject.SetActive(shouldShow);
+        }
     }
 
+    // --- Commands ---
     public void MoveTo(Vector3 destination)
     {
-        // 🛡️ حماية: إذا لم يتم تجهيز الـ AI بعد، جهزه فوراً
+        // 🛡️ Safety: Initialize if not ready
         if (stateMachine == null)
         {
             stateMachine = new UnitStateMachine(this);
@@ -85,13 +111,44 @@ public class Unit : MonoBehaviour, IDamageable
         stateMachine.ChangeState(new UnitState_Move(destination));
     }
 
+    public void StopMoving()
+    {
+        if (IsAgentReady)
+        {
+            agent.ResetPath();
+        }
+    }
+
     // --- IDamageable Implementation ---
     public Unit.Team GetTeam() { return team; }
     public Transform GetTransform() { return transform; }
     public bool IsAlive() { return currentHP > 0; }
     public float GetRadius() { return agent != null ? agent.radius : 0.5f; }
+    public Collider GetCollider() { return GetComponent<Collider>(); } // 🛡️ Simple implementation for Unit
 
-    // --- AI Logic ---
+    public void TakeDamage(int amount)
+    {
+        currentHP -= amount;
+        UpdateHealthUI();
+        UpdateHealthBarVisibility();
+        if (currentHP <= 0) Die();
+    }
+
+    void UpdateHealthUI()
+    {
+        if (healthBarFill != null && data != null)
+        {
+            healthBarFill.fillAmount = currentHP / data.maxHealth;
+        }
+    }
+
+    void Die()
+    {
+        // Add death logic later (animation, pool return, etc)
+        Destroy(gameObject);
+    }
+
+    // --- AI Helper ---
     public bool FindClosestEnemy()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, visionRange);
@@ -121,34 +178,25 @@ public class Unit : MonoBehaviour, IDamageable
         return false;
     }
 
-    // Future methods for State Machine
-    public void StopMoving()
+    // --- Gizmos for Debugging ---
+    private void OnDrawGizmosSelected()
     {
-        if (agent != null && agent.isOnNavMesh)
+        if (data != null)
         {
-            agent.ResetPath();
+            // Attack Range (Red)
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, data.attackRange);
         }
-    }
 
-    public void TakeDamage(int amount)
-    {
-        currentHP -= amount;
-        UpdateHealthUI();
-        if (currentHP <= 0) Die();
-    }
+        // Vision Range (Yellow)
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, visionRange);
 
-    void UpdateHealthUI()
-    {
-        if (healthBarFill != null && data != null)
+        // Target Line (Blue)
+        if (target != null)
         {
-            healthBarFill.fillAmount = currentHP / data.maxHealth;
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(transform.position, target.GetTransform().position);
         }
-    }
-
-    void Die()
-    {
-        // Add death logic later (animation, pool return, etc)
-        Destroy(gameObject);
-    
     }
 }

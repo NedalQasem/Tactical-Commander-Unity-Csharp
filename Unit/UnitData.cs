@@ -17,7 +17,13 @@ public class UnitData : ScriptableObject
     public int maxHealth;
     public int attackDamage;
     public float moveSpeed;
+    public enum AttackType { Melee, Ranged }
+    
+    [Header("Combat Config")]
+    public AttackType attackType = AttackType.Melee;
+    public GameObject projectilePrefab; // للرماة فقط: ضع سهم هنا
     public float attackRange;
+    public float attackRate = 1.0f; // سرعة الهجوم (بالثواني بين الضربات)
 
     [Header("Balancing")]
     public float damageMultiplier = 1.0f; // لتسهيل موازنة الضرر لاحقاً

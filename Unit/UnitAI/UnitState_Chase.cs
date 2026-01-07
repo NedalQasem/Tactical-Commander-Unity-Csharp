@@ -3,7 +3,7 @@ using UnityEngine;
 public class UnitState_Chase : IUnitState
 {
     private Unit unit;
-    private IDamageable target; // ⬅️ تعديل النوع
+    private IDamageable target;
     private float updateTimer = 0f;
 
     public UnitState_Chase(IDamageable target)
@@ -14,16 +14,17 @@ public class UnitState_Chase : IUnitState
     public void Enter(Unit unit)
     {
         this.unit = unit;
-        if (target != null && unit.agent != null)
+        if (target != null && unit.IsAgentReady)
         {
             unit.agent.isStopped = false;
+            unit.agent.stoppingDistance = 0f; // 🛑 Force stop manual control
             unit.agent.SetDestination(target.GetTransform().position);
         }
     }
 
     public void Update(Unit unit)
     {
-        // 1. تحقق: هل العدو ما زال موجوداً؟
+        // 1. Validate Target
         if (target == null || !target.IsAlive())
         {
             unit.target = null;
@@ -31,33 +32,58 @@ public class UnitState_Chase : IUnitState
             return;
         }
 
-        // 2. تحديث المسار
+        // 2. Refresh Path periodically
         updateTimer += Time.deltaTime;
         if (updateTimer > 0.2f)
         {
-            unit.agent.SetDestination(target.GetTransform().position);
+            if (unit.IsAgentReady) unit.agent.SetDestination(target.GetTransform().position);
             updateTimer = 0f;
         }
 
-        // 3. فحص المسافة (مع مراعاة نصف قطر الهدف للمباني الكبيرة)
-        float dist = Vector3.Distance(unit.transform.position, target.GetTransform().position);
+        // 3. Logic Split: Melee vs Ranged
         float attackRange = (unit.data != null) ? unit.data.attackRange : 2.0f;
-        
-        // نضيف نصف قطر الهدف للمسافة (إذا كان مبنى كبيراً نقترب من حافته وليس مركزه)
-        float targetRadius = target.GetRadius();
+        bool isMelee = (unit.data != null && unit.data.attackType == UnitData.AttackType.Melee);
 
-        if (dist <= attackRange + targetRadius)
+        // Calculate Surface Distance
+        float dist;
+        Collider targetCol = target.GetCollider();
+        if (targetCol != null)
+        {
+            Vector3 closestPoint = targetCol.ClosestPoint(unit.transform.position);
+            dist = Vector3.Distance(unit.transform.position, closestPoint);
+        }
+        else
+        {
+            dist = Vector3.Distance(unit.transform.position, target.GetTransform().position);
+            dist -= target.GetRadius();
+        }
+
+        // 🛑 Decide Goal Distance
+        float goalDist;
+        if (isMelee)
+        {
+            // Melee: ZERO distance. Touch the collider.
+            goalDist = 0.2f; // Small epsilon for float errors
+        }
+        else
+        {
+            // Ranged: Respect attack range
+            goalDist = attackRange;
+        }
+
+        if (dist <= goalDist)
         {
             unit.stateMachine.ChangeState(new UnitState_Attack(target));
         }
         else
         {
-             unit.agent.isStopped = false;
+             // Keep moving
+             if (unit.IsAgentReady) unit.agent.isStopped = false;
         }
     }
 
     public void Exit(Unit unit)
     {
-        if (unit.agent != null) unit.agent.isStopped = true;
+        if (unit.IsAgentReady) unit.agent.isStopped = true;
     }
 }

@@ -206,6 +206,10 @@ public class SelectionManager : MonoBehaviour
     void SelectBuilding(BuildingBase building)
     {
         selectedBuilding = building;
+        
+        building.isSelected = true;
+        building.UpdateHealthBarVisibility();
+        
         // Update UI via PlacementManager
         if (placementManager != null) placementManager.UpdateSelectionUI(building);
     }
@@ -219,9 +223,15 @@ public class SelectionManager : MonoBehaviour
 
     void DeselectBuilding()
     {
-        if (selectedBuilding is Barracks barracks && barracks.visualRallyPoint != null)
+        if (selectedBuilding != null)
         {
-            barracks.visualRallyPoint.SetActive(false);
+            selectedBuilding.isSelected = false;
+            selectedBuilding.UpdateHealthBarVisibility();
+
+            if (selectedBuilding is Barracks barracks && barracks.visualRallyPoint != null)
+            {
+                barracks.visualRallyPoint.SetActive(false);
+            }
         }
         selectedBuilding = null;
         if (placementManager != null) placementManager.ClearSelectionUI();

@@ -4,7 +4,11 @@ public class UnitState_Idle : IUnitState
 {
     public void Enter(Unit unit)
     {
-        // Future: Play Idle Animation
+        // تحقق: هل الـ Agent موجود وهل هو فعلاً على الأرض؟
+        if (unit.IsAgentReady) 
+        {
+            unit.agent.ResetPath();
+        }
     }
 
     private float detectionTimer = 0f;
@@ -16,7 +20,7 @@ public class UnitState_Idle : IUnitState
         {
             if (unit.FindClosestEnemy())
             {
-                unit.stateMachine.ChangeState(new UnitState_Chase(unit.target));
+                unit.stateMachine.ChangeState(new UnitState_Chase(unit.target)); // ⬅️ تصحيح الاسم
             }
             detectionTimer = 0f;
         }
