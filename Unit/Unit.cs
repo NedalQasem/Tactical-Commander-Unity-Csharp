@@ -149,7 +149,6 @@ public class Unit : MonoBehaviour, IDamageable
     {
         // Add death logic later (animation, pool return, etc)
         Destroy(gameObject);
-    deathSound.Play();
     
     }
 }
