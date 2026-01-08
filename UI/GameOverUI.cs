@@ -52,5 +52,11 @@ public class GameOverUI : MonoBehaviour
             titleTextLegacy.text = msg;
             titleTextLegacy.color = col;
         }
+
+        // 🔊 SFX Game Over
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(playerWon ? SoundType.Victory : SoundType.Defeat);
+        }
     }
 }

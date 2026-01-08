@@ -151,6 +151,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
         currentHP -= amount;
         UpdateHealthUI();
         UpdateHealthBarVisibility();
+        
+        // 🔊 SFX Hit
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitHit, transform.position);
+
         if (currentHP <= 0) Die();
     }
 
@@ -164,6 +168,9 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
     protected virtual void Die()
     {
+        // 🔊 SFX Die
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitDie, transform.position);
+
         // Add death logic later (animation, pool return, etc)
         Destroy(gameObject);
     }

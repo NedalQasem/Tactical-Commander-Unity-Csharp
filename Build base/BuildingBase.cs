@@ -57,5 +57,9 @@ public abstract class BuildingBase : MonoBehaviour, IDamageable
         }
     }
 
-    protected virtual void Die() => Destroy(gameObject);
+    protected virtual void Die()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.BuildingDestroyed, transform.position);
+        Destroy(gameObject);
+    }
 }
