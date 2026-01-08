@@ -86,7 +86,7 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        // 🎼 Auto-Play Background Music
+        // Auto-Play Background Music
         if (defaultBGM != null)
         {
             PlayMusic(defaultBGM);
@@ -114,7 +114,7 @@ public class AudioManager : MonoBehaviour
         musicSource.Play();
     }
 
-    // Play Global 2D Sound (UI, Narrator, etc.)
+    // Play Global 2D Sound
     public void PlaySFX(SoundType type)
     {
         if (sfxSource == null) return;
@@ -123,12 +123,13 @@ public class AudioManager : MonoBehaviour
         {
             if (sound.clip != null)
             {
+                sfxSource.pitch = sound.pitch; 
                 sfxSource.PlayOneShot(sound.clip, sound.volume);
             }
         }
         else
         {
-            Debug.LogWarning($"AudioManager: Sound {type} not found in library!");
+            Debug.LogWarning($"AudioManager: Sound {type} playing failed (NotFound).");
         }
     }
 
@@ -139,11 +140,25 @@ public class AudioManager : MonoBehaviour
         {
             if (sound.clip != null)
             {
-                // Create a temporary GameObject to play the sound at location
-                // AudioSource.PlayClipAtPoint doesn't allow volume/pitch control easily, 
-                // but it's the simplest built-in way which auto-destroys.
-                // ideally we use a pool, but this is fine for now.
-                AudioSource.PlayClipAtPoint(sound.clip, position, sound.volume);
+                //  Custom 3D Sound Creation
+                GameObject audioObj = new GameObject($"SFX_{type}");
+                audioObj.transform.position = position;
+                
+                AudioSource source = audioObj.AddComponent<AudioSource>();
+                source.clip = sound.clip;
+                source.volume = sound.volume;
+                source.pitch = sound.pitch;
+                
+                
+                source.spatialBlend = 1f; // Fully 3D
+                source.minDistance = 8f;  // Hear fully within 8 meters (Adjusted for camera height)
+                source.maxDistance = 50f; // Fade out at 50 meters
+                source.rolloffMode = AudioRolloffMode.Linear; 
+                
+                source.Play();
+                
+                // Cleanup
+                Destroy(audioObj, sound.clip.length / source.pitch + 0.1f);
             }
         }
     }

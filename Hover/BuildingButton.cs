@@ -8,17 +8,15 @@ public class BuildingButton : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public string bDescription;
 
     private PlacementManager pManager;
-    private RectTransform rectTransform; // áÊÎÒíä ãæŞÚ ÇáÒÑ
+    private RectTransform rectTransform;
     void Start()
     {
         pManager = FindFirstObjectByType<PlacementManager>();
-        rectTransform = GetComponent<RectTransform>(); // ÇáÍÕæá Úáì ãßæä ÇáãæŞÚ
+        rectTransform = GetComponent<RectTransform>(); 
     }
 
-    // íÊã ÇÓÊÏÚÇÄåÇ ÚäÏ ÏÎæá ÇáãÇæÓ ãäØŞÉ ÇáÒÑ
     public void OnPointerEnter(PointerEventData eventData)
     {
-        // äÑÓá ÇáÇÓã¡ ÇáÓÚÑ¡ æÇáãæŞÚ (GetComponent<RectTransform>())
         pManager.ShowTooltip(bName, bCost, GetComponent<RectTransform>());
     }
 

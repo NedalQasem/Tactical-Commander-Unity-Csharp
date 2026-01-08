@@ -6,7 +6,7 @@ public class Barracks : BuildingBase
     [Header("Training Settings")]
     public Transform spawnPoint;
     public Transform rallyPoint;
-    public GameObject visualRallyPoint; // النقطة الخضراء المرئية
+    public GameObject visualRallyPoint;
 
     private Queue<UnitData> trainingQueue = new Queue<UnitData>();
     private float trainingTimer = 0f;
@@ -71,6 +71,8 @@ public class Barracks : BuildingBase
                 {
                     unitScript.MoveTo(rallyPoint.position);
                 }
+                
+                if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitSpawn, spawnPoint.position);
             }
         }
     }

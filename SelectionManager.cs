@@ -118,54 +118,39 @@ public class SelectionManager : MonoBehaviour
     void HandleRightClick()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        // 🛠️ Fix: Relaxed Raycast to hit Ground OR Default (in case mask is wrong)
-        // Using "Physics.DefaultRaycastLayers" or just no mask if we trust the scene
         if (Physics.Raycast(ray, out RaycastHit hit, 1000f)) // Removed specific groundMask constraint for robustness
         {
-            // 1. Move Units with Formation
-            // 🧹 Cleanup: Remove dead units first
             selectedUnits.RemoveAll(u => u == null);
 
             if (selectedUnits.Count > 0)
             {
-                // Safety: Do not command Enemy units
                 if (selectedUnits[0].team != Unit.Team.Player) return;
 
-                // ⚔️ FORCE ATTACK LOGIC
-                // Check if we clicked on an Enemy (Unit or Building)
                 IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
                 if (target != null && target.GetTeam() != Unit.Team.Player && target.IsAlive())
                 {
-                    // Order all selected units to ATTACK this specific target
                     foreach (Unit u in selectedUnits)
                     {
                         if (u != null)
                         {
                             u.target = target;
-                             // Uses Chase state to move into range then attack
                             u.stateMachine.ChangeState(new UnitState_Chase(target));
                         }
                     }
-                    // Visualization for the user
-                    // Instantiate(attackMarkerPrefab, hit.point, ...) // Future Polish
-                    return; // 🛑 Stop here! Do not execute move logic.
+                    return; 
                 }
 
-                // 🔥 ترتيب الجنود: Melee أولاً، ثم Swordsman، ثم Archer
                 selectedUnits.Sort((a, b) => {
                     int priorityA = GetUnitPriority(a.data.unitName);
                     int priorityB = GetUnitPriority(b.data.unitName);
                     return priorityA.CompareTo(priorityB);
                 });
 
-                // 1. حساب مركز المجموعة الحالي لمعرفة الاتجاه
                 Vector3 groupCenter = Vector3.zero;
                 foreach (Unit u in selectedUnits) groupCenter += u.transform.position;
                 groupCenter /= selectedUnits.Count;
 
-                // 2. حساب اتجاه الحركة
                 Vector3 direction = (hit.point - groupCenter).normalized;
-                // إذا المسافة صغيرة جداً، استخدم اتجاه الثكنة أو الأمام الافتراضي لمنع الأخطاء
                 if (direction == Vector3.zero) direction = Vector3.forward;
                 Quaternion rotation = Quaternion.LookRotation(direction);
 
@@ -182,22 +167,18 @@ public class SelectionManager : MonoBehaviour
                     foreach (Unit u in selectedUnits) u.MoveTo(hit.point);
                 }
             }
-            // 2. Set Rally Point
             else if (selectedBuilding != null && selectedBuilding is Barracks barracks)
             {
-                 // Move existing rally point logic
                  if (barracks.rallyPoint != null) 
                  {
                      barracks.rallyPoint.position = hit.point;
                  }
                  
-                 // Handle Visuals & Auto-Assign
                  if (barracks.visualRallyPoint != null)
                  {
                      barracks.visualRallyPoint.transform.position = hit.point + Vector3.up * 1.0f;
                      if (!barracks.visualRallyPoint.activeSelf) barracks.visualRallyPoint.SetActive(true);
                      
-                     // 🛠️ Fix: Ensure logical rally point is linked to visual
                      if (barracks.rallyPoint == null) barracks.rallyPoint = barracks.visualRallyPoint.transform;
                  }
                  else if (rallyPointPrefab != null)
@@ -211,7 +192,6 @@ public class SelectionManager : MonoBehaviour
                       
                       barracks.visualRallyPoint = newRallyPoint;
                       
-                      // 🛠️ Fix: Link logical rally point
                       barracks.rallyPoint = newRallyPoint.transform;
                  }
             }

@@ -9,8 +9,6 @@ public class BuildingGhost : MonoBehaviour
     {
         renderers = GetComponentsInChildren<MeshRenderer>();
     }
-
-    // Â–Â «·œ«·… ” Œ»—‰« ≈–« ﬂ«‰ «·„ﬂ«‰ „ÕÃÊ“«
     public bool CanPlace()
     {
         return !isOverlapping;
@@ -18,22 +16,17 @@ public class BuildingGhost : MonoBehaviour
 
     void Update()
     {
-        // «” Œœ«„ OverlapBox ·· √ﬂœ „‰ Œ·Ê «·„‰ÿﬁ…
-        // ‰” Œœ„ ‰›” ÕÃ„ «·‹ Collider «·Œ«’ »«·„»‰Ï
         Collider[] colliders = Physics.OverlapBox(transform.position, new Vector3(1.5f, 1f, 1.5f), transform.rotation);
 
         isOverlapping = false;
         foreach (var col in colliders)
         {
-            // ≈–« ·„”‰« √Ì ‘Ì¡ ·Ì” "«·√—÷"
             if (col.gameObject != this.gameObject && !col.CompareTag("Ground"))
             {
                 isOverlapping = true;
                 break;
             }
         }
-
-        //  €ÌÌ— «··Ê‰ »‰«¡ ⁄·Ï ’·«ÕÌ… «·„ﬂ«‰
         SetColor(CanPlace());
     }
 

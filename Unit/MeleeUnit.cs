@@ -6,8 +6,6 @@ public class MeleeUnit : Unit
 
     public override float GetAttackRange(IDamageable target)
     {
-        // 📏 Strict Physical Math for Melee Range
-        // Must be close enough to basically touch
         if (target == null) return 1.0f;
 
         float myRadius = GetRadius();
@@ -20,10 +18,11 @@ public class MeleeUnit : Unit
     {
         if (unitAnimation != null) unitAnimation.PlayAttack();
 
-        // 🛡️ CRITICAL: Prevent Friendly Fire
         if (target.GetTeam() == this.team) return;
 
-        // Apply Damage Directly (could be synced with Animation Event in future)
+        // 🔊 Attack Sound
+        if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitAttack, transform.position);
+
         int dmg = (data != null) ? data.attackDamage : 10;
         target.TakeDamage(dmg);
     }

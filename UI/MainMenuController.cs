@@ -4,12 +4,10 @@ using UnityEngine.SceneManagement;
 public class MainMenuController : MonoBehaviour
 {
     [Header("Settings")]
-    public string gameSceneName = "SampleScene"; // Name of your actual gameplay scene
+    public string gameSceneName = "SampleScene";
 
     public void PlayGame()
     {
-        // Load the game scene
-        // Ensure the scene is added to Build Settings!
         SceneManager.LoadScene(gameSceneName);
     }
 

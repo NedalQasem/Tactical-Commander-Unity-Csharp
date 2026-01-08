@@ -7,9 +7,6 @@ public class GoldMine : BuildingBase
     public float interval = 5f;
 
     private float timer;
-
-    // public int constructionCost; // Removed to use base class property 
-
     [Header("VFX Settings")]
     public GameObject floatingTextPrefab;
 
@@ -32,7 +29,6 @@ public class GoldMine : BuildingBase
 
     void GenerateGold()
     {
-        // 🛑 فقط إذا كان المنجم تابعاً للاعب، أضف الذهب للخزينة
         if (team == Unit.Team.Player)
         {
             if (ResourceManager.Instance != null)
@@ -48,8 +44,7 @@ public class GoldMine : BuildingBase
         }
         else
         {
-            // 💰 منطق العدو: العدو يحصل على ذهبه من خلال سكربت EnemyAIController مباشرة
-            // (أو يمكننا البحث عن الكنترولر وإضافة الذهب له هنا مستقبلاً)
+           
         }
     }
 }

@@ -26,7 +26,6 @@ public class EnemySelectionMarker : MonoBehaviour
 
     void Update()
     {
-        // Continuously enforce visibility for Enemies
         if (unit != null && unit.team == Unit.Team.Enemy && unit.selectionCircle != null)
         {
             if (!unit.selectionCircle.activeSelf) 
@@ -42,7 +41,6 @@ public class EnemySelectionMarker : MonoBehaviour
 
         if (unit.team == Unit.Team.Enemy)
         {
-            // 🔴 Force Red & Visible
             unit.selectionCircle.SetActive(true);
             if (circleRenderer != null) circleRenderer.color = Color.red;
         }

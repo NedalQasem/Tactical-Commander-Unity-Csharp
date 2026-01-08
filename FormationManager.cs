@@ -41,7 +41,6 @@ public class FormationManager : MonoBehaviour
                 float lineStart = -((count - 1) * unitSpacing) / 2f;
                 for (int i = 0; i < count; i++)
                 {
-                    // السطر يكون على المحور X، لذا الجنود ينظرون لـ Z.
                     Vector3 offset = new Vector3(lineStart + i * unitSpacing, 0, 0);
                     points.Add(center + rotation * offset);
                 }
@@ -81,7 +80,6 @@ public class FormationManager : MonoBehaviour
                     float angle = i * (360f / count);
                     float radius = count * 0.5f; 
                     Vector3 pos = new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), 0, Mathf.Sin(angle * Mathf.Deg2Rad)) * radius;
-                    // الدائرة متناظرة، لكن التدوير قد يفيد لتدوير ترتيب الجنود
                     points.Add(center + rotation * pos);
                 }
                 break;

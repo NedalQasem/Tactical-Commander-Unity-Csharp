@@ -13,16 +13,13 @@ public class UnitState_Move : IUnitState
     {
         if (unit.IsAgentReady)
         {
-            unit.agent.isStopped = false; // 🟢 Ensure agent can move!
+            unit.agent.isStopped = false; 
             unit.agent.SetDestination(targetPosition);
         }
     }
 
     public void Update(Unit unit)
     {
-        // 🛡️ Conditional Logic:
-        // Player: Standard Move (Disengage/Ignore enemies)
-        // Enemy: Attack Move (Aggressive - Attack if they see someone)
         if (unit.team == Unit.Team.Enemy)
         {
             if (unit.FindClosestEnemy())
@@ -35,12 +32,10 @@ public class UnitState_Move : IUnitState
             }
         }
 
-        // Check if we reached the destination
         if (unit.IsAgentReady && !unit.agent.pathPending)
         {
             if (unit.agent.remainingDistance <= unit.agent.stoppingDistance)
             {
-                // Reached destination -> Switch back to Idle
                 unit.stateMachine.ChangeState(new UnitState_Idle());
             }
         }

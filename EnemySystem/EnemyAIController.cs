@@ -28,24 +28,19 @@ public class EnemyAIController : MonoBehaviour
 
     void Start()
     {
-        // ⚖️ Fair Start: Reset gold to 100 ensuring Inspector didn't save a high value
         currentGold = 100;
         
-        // Prevent accidental high income rates from Inspector overrides
         goldIncomeRate = 0f; 
     }
 
     void Update()
     {
-        // 💰 Income Logic: 10 Gold every 5 Seconds
+        //  Income Logic: 10 Gold every 5 Seconds
         incomeTimer += Time.deltaTime;
         if (incomeTimer >= 5.0f)
         {
             currentGold += 10;
             
-            // Optional: Extra income from mines?
-            // User requested "10 every 5 seconds", likely base.
-            // Let's keep mines relevant but balanced. 5 gold per mine every 5 seconds?
             int mineCount = CountBuildings("Mine");
             if (mineCount > 0)
             {
@@ -63,32 +58,25 @@ public class EnemyAIController : MonoBehaviour
         }
     }
 
-    private float accumulator = 0f; // لتجميع كسور الذهب
+    private float accumulator = 0f;
 
     void MakeDecision()
     {
-        // 🔥 الأولوية 0: الهجوم! (تفقد هذا أولاً)
         if (myArmy.Count >= attackThreshold)
         {
             LaunchAttack();
             return;
         }
-
-        // الأولوية 1: بناء منجم إذا لم يوجد
         if (CountBuildings("Mine") < 2 && currentGold >= 50)
         {
             TryBuildBuilding(minePrefab, 50, "Mine");
             return;
         }
-
-        // الأولوية 2: بناء ثكنة
         if (CountBuildings("Barracks") < 1 && currentGold >= 50)
         {
             TryBuildBuilding(barracksPrefab, 50, "Barracks");
             return;
         }
-
-        // الأولوية 3: تدريب جنود
         if (CountBuildings("Barracks") > 0 && currentGold >= 10)
         {
             TrainUnit();
@@ -104,7 +92,6 @@ public class EnemyAIController : MonoBehaviour
             currentGold -= cost;
             GameObject b = Instantiate(prefab, buildPos, Quaternion.identity);
             
-            // ⚠️ تعيين الفريق وتفعيل المبنى
             BuildingBase buildingScript = b.GetComponent<BuildingBase>();
             if (buildingScript != null)
             {
@@ -134,7 +121,6 @@ public class EnemyAIController : MonoBehaviour
 
         if (barracks == null) return;
 
-        // 2. Filter Affordable Units
         List<GameObject> affordableUnits = new List<GameObject>();
         foreach(var prefab in unitPrefabs)
         {
@@ -149,15 +135,12 @@ public class EnemyAIController : MonoBehaviour
             }
         }
 
-        // 3. Buy a unit if possible
         if (affordableUnits.Count > 0)
         {
-            // Pick random affordable unit
             GameObject chosenPrefab = affordableUnits[Random.Range(0, affordableUnits.Count)];
             Unit unitDataScript = chosenPrefab.GetComponent<Unit>();
             int cost = unitDataScript.data.goldCost;
 
-            // Pay the price 💰
             currentGold -= cost;
 
             // Spawn
@@ -167,32 +150,31 @@ public class EnemyAIController : MonoBehaviour
             Unit newUnitScript = u.GetComponent<Unit>();
             if (newUnitScript != null)
             {
-                newUnitScript.team = Unit.Team.Enemy; // 🔴 Assign Team Enemy
+                newUnitScript.team = Unit.Team.Enemy; // Assign Team Enemy
                 myArmy.Add(newUnitScript);
             }
-            Debug.Log($"😈 Enemy Paid {cost} Gold to Train: {u.name}");
+            Debug.Log($" Enemy Paid {cost} Gold to Train: {u.name}");
         }
     }
 
     void LaunchAttack()
     {
-        Debug.Log("⚔️🔥 ENEMY ATTACK LAUNCHED! 🔥⚔️");
+        Debug.Log(" ENEMY ATTACK LAUNCHED! ");
         foreach (var unit in myArmy)
         {
             if (unit != null && unit.IsAlive())
             {
                 unit.MoveTo(playerBaseTarget.position);
-                // اجعلهم بوضع هجومي (Attack Move)
-                // unit.stateMachine.ChangeState(new UnitState_AttackMove(...));
+                //(Attack Move)
             }
         }
-        myArmy.Clear(); // انسَهم، فليذهبوا للموت! (أو انقلهم لقائمة "AttackingSquad")
+        myArmy.Clear(); //("AttackingSquad")
     }
 
-    // 👷‍♂️ البحث عن أرض فارغة وصالحة للبناء
+    //  البحث عن أرض فارغة وصالحة للبناء
     Vector3 FindBuildPosition()
     {
-        // 🔒 Safety Check: If Base is destroyed, we can't calculate position relative to it
+        //  Safety Check: If Base is destroyed, we can't calculate position relative to it
         if (enemyBaseCenter == null) return Vector3.zero;
 
         // Safety: If buildRadius is too small, default it
@@ -220,7 +202,7 @@ public class EnemyAIController : MonoBehaviour
             }
         }
         
-        Debug.LogWarning("⚠️ EnemyAI: Could not find valid build position after 30 tries.");
+        Debug.LogWarning(" EnemyAI: Could not find valid build position after 30 tries.");
         return Vector3.zero; // لم أجد مكاناً مناسباً
     }
 

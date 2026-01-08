@@ -25,10 +25,6 @@ public class UnitState_Chase : IUnitState
 
     public void Update(Unit unit)
     {
-        // 1. Validate Target
-        // 1. Validate Target
-        // ⚠️ Fix: IDamageable is an interface. Standard (target == null) checks the C# wrapper, not Unity Object life.
-        // We MUST cast to UnityEngine.Object to let Unity's "Magic Null" work for destroyed objects.
         if (target == null || (target as UnityEngine.Object) == null || !target.IsAlive())
         {
             unit.target = null;
@@ -36,7 +32,6 @@ public class UnitState_Chase : IUnitState
             return;
         }
 
-        // 2. Refresh Path periodically
         updateTimer += Time.deltaTime;
         if (updateTimer > 0.2f)
         {
@@ -44,13 +39,8 @@ public class UnitState_Chase : IUnitState
             updateTimer = 0f;
         }
 
-        // 3. Check Distance using Abstract Method
-        // This works for both Melee (Physical Contact) and Ranged (Attack Range)
         float goalDist = unit.GetAttackRange(target);
         
-        // Calculate Distance
-        // Note: For Melee, GetAttackRange includes Collider sizes, so we need consistent distance check
-        // Ideally, we use Surface Distance for everything to be accurate
         float currentDist = GetSurfaceDistance(unit, target);
 
         if (currentDist <= goalDist)
@@ -59,7 +49,6 @@ public class UnitState_Chase : IUnitState
         }
         else
         {
-             // Keep moving
              if (unit.IsAgentReady) unit.agent.isStopped = false;
         }
     }
@@ -71,7 +60,6 @@ public class UnitState_Chase : IUnitState
 
     private float GetSurfaceDistance(Unit unit, IDamageable target)
     {
-        // If MeleeUnit uses surface logic, we should use it here too
         Collider targetCol = target.GetCollider();
         if (targetCol != null)
         {
@@ -79,7 +67,6 @@ public class UnitState_Chase : IUnitState
             return Vector3.Distance(unit.transform.position, closestPoint);
         }
         
-        // Fallback for objects without cached colliders
         return Vector3.Distance(unit.transform.position, target.GetTransform().position) - target.GetRadius();
     }
 }

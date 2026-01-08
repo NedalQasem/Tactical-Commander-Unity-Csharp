@@ -26,15 +26,11 @@ public class UnitAnimation : MonoBehaviour
     {
         if (animator == null || agent == null) return;
 
-        // 🧠 المنطق التلقائي: إذا كان يتحرك، شغل الركض
-        // نستخدم sqrMagnitude لأنها أسرع في الحساب من magnitude
-        // نتحقق أيضاً أن المسار ليس معلقاً (PathPending)
         bool isMoving = !agent.isStopped && agent.velocity.sqrMagnitude > 0.1f && agent.remainingDistance > agent.stoppingDistance;
         
         animator.SetBool(moveParameter, isMoving);
     }
 
-    // دالة يستدعيها كود الهجوم
     public void PlayAttack()
     {
         if (animator != null)

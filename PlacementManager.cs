@@ -43,7 +43,6 @@ public class PlacementManager : MonoBehaviour
 
     [Header("Selection & Info UI")]
     [Header("Selection & Info UI")]
-    // public GameObject infoPanel; // Removed as requested
     public TextMeshProUGUI entityNameText;
     public TextMeshProUGUI healthText;
     public TextMeshProUGUI priceText;
@@ -55,7 +54,6 @@ public class PlacementManager : MonoBehaviour
     public TextMeshProUGUI tooltipCostText;
     public float tooltipYOffset = 50f;
 
-    // --- Box Selection Variables ---
     private Vector2 dragStartPos;
 
     private Texture2D whiteTexture; 
@@ -82,10 +80,6 @@ public class PlacementManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape)) CancelPlacement();
     }
 
-    // --- Selection Logic Moved to SelectionManager ---
-    // We keep UI references here for now to avoid breaking references in Editor, 
-    // but logic is exposed via public methods.
-
     public bool IsPlacingBuilding()
     {
         return activeGhost != null;
@@ -93,8 +87,6 @@ public class PlacementManager : MonoBehaviour
 
     public void UpdateSelectionUI(BuildingBase building)
     {
-        // Reuse existing SelectBuilding logic but public
-        // if (infoPanel != null) infoPanel.SetActive(true); // Removed
         if (entityNameText != null) entityNameText.text = building.buildingName;
         if (healthText != null) healthText.text = $"HP: {building.currentHealth} / {building.maxHealth}";
 
@@ -118,11 +110,9 @@ public class PlacementManager : MonoBehaviour
 
     public void ClearSelectionUI()
     {
-        // if (infoPanel != null) infoPanel.SetActive(false); // Removed
         if (BarracksUIManager.Instance != null) BarracksUIManager.Instance.CloseBarracksUI();
     }
 
-    // --- End Selection Logic ---
 
     void FinishPlacement(Vector3 pos)
     {
@@ -153,6 +143,7 @@ public class PlacementManager : MonoBehaviour
         {
             GameObject newMine = Instantiate(goldMinePrefab, pos, Quaternion.Euler(0, currentBuildingRotation, 0));
             newMine.GetComponent<GoldMine>().isPlaced = true;
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.BuildingPlaced, pos);
             currentMinesCount++;
         }
     }
@@ -162,7 +153,6 @@ public class PlacementManager : MonoBehaviour
         if (currentBarracksCount >= maxBarracks) return;
         CancelPlacement();
 
-        // Use ResourceManager
         if (ResourceManager.Instance != null && ResourceManager.Instance.GetCurrentGold() < barracksCost) return;
 
         currentMode = PlacementMode.Barracks;
@@ -173,12 +163,12 @@ public class PlacementManager : MonoBehaviour
 
     void ExecuteBarracksPlacement(Vector3 pos)
     {
-        // Use ResourceManager
         if (ResourceManager.Instance != null && ResourceManager.Instance.TrySpendGold(barracksCost))
         {
             GameObject newBarracks = Instantiate(barracksPrefab, pos, Quaternion.Euler(0, currentBuildingRotation, 0));
             Barracks barracksScript = newBarracks.GetComponent<Barracks>();
             if (barracksScript != null) barracksScript.isPlaced = true;
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.BuildingPlaced, pos);
             currentBarracksCount++;
         }
     }
@@ -198,7 +188,6 @@ public class PlacementManager : MonoBehaviour
         List<Vector3> offsets = GetFormationOffsets();
         int totalCost = offsets.Count * soldierCost;
         
-        // Use ResourceManager
         if (ResourceManager.Instance != null && ResourceManager.Instance.GetCurrentGold() >= totalCost)
         {
             ResourceManager.Instance.TrySpendGold(totalCost);
@@ -206,20 +195,18 @@ public class PlacementManager : MonoBehaviour
             {
                 Instantiate(soldierPrefab, pos + offset, Quaternion.identity);
             }
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitSpawn, pos);
         }
     }
 
     public void ShowTooltip(string bName, int bCost, RectTransform buttonRect)
     {
-        // إذا كان هناك مبنى محدد، لا تظهر التلميح
         if (selectedBuilding != null) return;
         
         tooltipPanel.SetActive(true);
         tooltipNameText.text = bName;
         tooltipCostText.text = "Cost: " + bCost;
 
-        // حساب الموضع الجديد: مركز الزر + نصف ارتفاع الزر + الإزاحة المطلوبة
-        // هذا يضمن ظهور التلميح فوق الزر تماماً بغض النظر عن حجم الزر
         float halfHeight = (buttonRect.rect.height * buttonRect.lossyScale.y) / 2f;
         Vector3 newPos = buttonRect.position + new Vector3(50, halfHeight + tooltipYOffset, 0);
         

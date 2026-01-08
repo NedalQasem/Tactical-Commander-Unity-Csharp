@@ -7,7 +7,6 @@ public class RangedUnit : Unit
 
     public override float GetAttackRange(IDamageable target)
     {
-        // 🏹 Standard Vision/Attack Range
         return (data != null) ? data.attackRange : 10f;
     }
 
@@ -15,9 +14,10 @@ public class RangedUnit : Unit
     {
         if (unitAnimation != null) unitAnimation.PlayAttack();
 
-        // Spawn Projectile
         if (data != null && data.projectilePrefab != null)
         {
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitAttack, transform.position);
+
             Transform spawnPoint = (firePoint != null) ? firePoint : transform; // Fallback to self
             GameObject projObj = Instantiate(data.projectilePrefab, spawnPoint.position, spawnPoint.rotation);
             
@@ -30,20 +30,18 @@ public class RangedUnit : Unit
         }
         else
         {
-            Debug.LogWarning($"⚠️ RangedUnit {name} has no Projectile Prefab assigned in Data!");
+            Debug.LogWarning($" RangedUnit {name} has no Projectile Prefab assigned in Data!");
         }
     }
 
     protected override void Awake()
     {
-        base.Awake(); // Call Unit.Awake to init Agent and Animation
+        base.Awake();
         
         if (firePoint == null)
         {
-            // Auto-find if not assigned
             Transform autoFirePoint = transform.Find("FirePoint");
             if (autoFirePoint != null) firePoint = autoFirePoint;
-            // else FirePoint remains null and defaults to transform.position in TryAttack
         }
     }
 

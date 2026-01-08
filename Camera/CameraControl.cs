@@ -77,15 +77,9 @@ public class CameraControl : MonoBehaviour
 
         if (found)
         {
-            // Apply Offset
-            // User Request: Camera Direction on X-Axis at Start
-            // Means we look ALONG X. Position needs to be offset on X, centered on Z.
             targetPos.y = transform.position.y;
-            targetPos.x -= 20f; // Pull back along X-axis
-            // targetPos.z is already the target's Z (centered)
+            targetPos.x -= 20f;
 
-            
-            // Clamp to boundaries if valid
             if (useBoundaries)
             {
                 targetPos.x = Mathf.Clamp(targetPos.x, minX, maxX);
@@ -94,8 +88,7 @@ public class CameraControl : MonoBehaviour
 
             transform.position = targetPos;
             
-            // 🔄 Rotate Camera to Face Right (+X axis)
-            transform.rotation = Quaternion.Euler(60f, 90f, 0f); // 60 degree tilt, 90 degree Y rotation
+            transform.rotation = Quaternion.Euler(60f, 90f, 0f);
         }
         else
         {
@@ -157,11 +150,7 @@ public class CameraControl : MonoBehaviour
         {
             // Calculate screen delta
             Vector3 delta = Input.mousePosition - lastMousePos;
-            
-            // Map Screen Movement to World Plane
-            // Dragging LEFT (Negative X) should move camera RIGHT (Positive X) to "pull" the world
-            // Dragging UP (Positive Y) should move camera DOWN (Negative Z)
-            
+                        
             // Sensitivity Factor
             float speed = dragSpeed * 0.05f * (transform.position.y / 10f); // Scale with Zoom height
 
@@ -172,7 +161,6 @@ public class CameraControl : MonoBehaviour
             lastMousePos = Input.mousePosition;
         }
 
-        // 🔒 5. Clamping
         if (useBoundaries)
         {
             pos.x = Mathf.Clamp(pos.x, minX, maxX);

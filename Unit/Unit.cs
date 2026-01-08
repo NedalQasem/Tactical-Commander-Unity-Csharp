@@ -53,12 +53,10 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
     protected virtual IEnumerator Start()
     {
-        // Wait one frame to ensure NavMeshAgent is placed on the NavMesh
         yield return null;
 
         if (data != null) currentHP = data.maxHealth;
         
-        // Initialize State Machine safely
         stateMachine = new UnitStateMachine(this);
         stateMachine.Initialize(new UnitState_Idle());
     }
@@ -68,7 +66,6 @@ public abstract class Unit : MonoBehaviour, IDamageable
         if (stateMachine != null) stateMachine.Update();
     }
 
-    // --- Selection Logic ---
     private bool isSelected = false;
 
     public void OnSelect()
@@ -100,10 +97,8 @@ public abstract class Unit : MonoBehaviour, IDamageable
         }
     }
 
-    // --- Commands ---
     public void MoveTo(Vector3 destination)
     {
-        // 🛡️ Safety: Initialize if not ready
         if (stateMachine == null)
         {
             stateMachine = new UnitStateMachine(this);
@@ -122,28 +117,25 @@ public abstract class Unit : MonoBehaviour, IDamageable
         }
     }
 
-    // --- IDamageable Implementation ---
     public Unit.Team GetTeam() { return team; }
     public Transform GetTransform() { return transform; }
     public bool IsAlive() { return currentHP > 0; }
     public float GetRadius() { return agent != null ? agent.radius : 0.5f; }
     public Collider GetCollider() { return GetComponent<Collider>(); } // 🛡️ Simple implementation for Unit
 
-    // 🎯 Auto-Targeting Helper
     public IDamageable ScanForEnemies(float range)
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, range);
         foreach (var hit in hits)
         {
-            // 🛡️ Use GetComponentInParent just in case collider is on a child mesh
             IDamageable d = hit.GetComponentInParent<IDamageable>();
             // 🛡️ Safety Check: Ensure the object isn't destroyed
             if ((d as UnityEngine.Object) != null && d != null && d.GetTeam() != team && d.IsAlive())
             {
-                return d; // Found an enemy!
+                return d;
             }
         }
-        return null; // No enemies in range
+        return null; 
     }
 
     public void TakeDamage(int amount)
@@ -168,14 +160,12 @@ public abstract class Unit : MonoBehaviour, IDamageable
 
     protected virtual void Die()
     {
-        // 🔊 SFX Die
         if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitDie, transform.position);
 
         // Add death logic later (animation, pool return, etc)
         Destroy(gameObject);
     }
 
-    // --- AI Helper ---
     public bool FindClosestEnemy()
     {
         Collider[] hits = Physics.OverlapSphere(transform.position, visionRange);
@@ -186,7 +176,6 @@ public abstract class Unit : MonoBehaviour, IDamageable
         {
             IDamageable potentialTarget = hit.GetComponentInParent<IDamageable>();
             
-            // 🛡️ Safety Check: Ensure the object isn't destroyed
             if ((potentialTarget as UnityEngine.Object) != null && 
                 potentialTarget != null && 
                 potentialTarget.GetTeam() != this.team && 
@@ -209,21 +198,17 @@ public abstract class Unit : MonoBehaviour, IDamageable
         return false;
     }
 
-    // --- Gizmos for Debugging ---
     protected virtual void OnDrawGizmosSelected()
     {
         if (data != null)
         {
-            // Attack Range (Red) - using property might not work in editor if not initialized, usage cautious
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, data.attackRange);
         }
 
-        // Vision Range (Yellow)
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, visionRange);
 
-        // Target Line (Blue)
         if (target != null)
         {
             Gizmos.color = Color.blue;

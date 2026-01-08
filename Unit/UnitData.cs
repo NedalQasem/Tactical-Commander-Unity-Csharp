@@ -6,12 +6,12 @@ public class UnitData : ScriptableObject
 {
     [Header("Visuals")]
     public string unitName;
-    public Sprite unitIcon; // أيقونة الجندي للثكنة
-    public GameObject unitPrefab; // الموديل الخاص بالجندي
+    public Sprite unitIcon; 
+    public GameObject unitPrefab; 
 
     [Header("Economy")]
-    public int goldCost; // سعر الجندي
-    public float trainingTime; // زمن التدريب في الثكنة
+    public int goldCost;
+    public float trainingTime; 
 
     [Header("Stats")]
     public int maxHealth;
@@ -21,11 +21,11 @@ public class UnitData : ScriptableObject
     
     [Header("Combat Config")]
     public AttackType attackType = AttackType.Melee;
-    public GameObject projectilePrefab; // للرماة فقط: ضع سهم هنا
+    public GameObject projectilePrefab; 
     public float attackRange;
-    public float attackRate = 1.0f; // سرعة الهجوم (بالثواني بين الضربات)
-    public float visionRange = 8.0f; // مدى الرؤية للاستهداف التلقائي
+    public float attackRate = 1.0f; 
+    public float visionRange = 8.0f; 
 
     [Header("Balancing")]
-    public float damageMultiplier = 1.0f; // لتسهيل موازنة الضرر لاحقاً
+    public float damageMultiplier = 1.0f;
 }

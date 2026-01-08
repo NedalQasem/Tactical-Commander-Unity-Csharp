@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class FormationGhost : PlacementGhost
 {
-    public float moveSpeed = 2f;    // ÓÑÚÉ ÇáÕÚæÏ
-    public float duration = 1.5f;   // ãÏÉ ÇáÈŞÇÁ
+    public float moveSpeed = 2f;    
+    public float duration = 1.5f; 
     private TextMeshProUGUI textMesh;
     private Color startColor;
     private float timer;
@@ -19,8 +19,6 @@ public class FormationGhost : PlacementGhost
             {
                 startColor = textMesh.color;
             }
-
-            // ÊÏãíÑ ÇáßÇÆä ÈÇáßÇãá ãä ÇáĞÇßÑÉ ÈÚÏ ÇäÊåÇÁ ÇáæŞÊ
             Destroy(gameObject, duration);
         }
 
@@ -28,7 +26,7 @@ public class FormationGhost : PlacementGhost
         {
             GameObject child = Instantiate(prefab, transform);
             child.transform.localPosition = offset;
-            // ÊäÙíİ ÇáäÓÎÉ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             Destroy(child.GetComponent<UnityEngine.AI.NavMeshAgent>());
         }
         base.Initialize(mat);
@@ -36,13 +34,10 @@ public class FormationGhost : PlacementGhost
 
     void Update()
     {
-        // 1. ÇáÊÍÑíß ááÃÚáì
         transform.Translate(Vector3.up * moveSpeed * Time.deltaTime);
 
-        // 2. ÌÚá ÇáäÕ íæÇÌå ÇáßÇãíÑÇ ÏÇÆãÇğ
         transform.LookAt(transform.position + Camera.main.transform.forward);
 
-        // 3. ÊÃËíÑ ÇáÊáÇÔí (ÊÛííÑ ÇáÔİÇİíÉ Alpha)
         timer += Time.deltaTime;
         if (textMesh != null)
         {

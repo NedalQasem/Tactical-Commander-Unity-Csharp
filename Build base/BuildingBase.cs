@@ -1,15 +1,15 @@
 ﻿using UnityEngine;
-using UnityEngine.UI; // ضروري جداً للتعامل مع الصور
+using UnityEngine.UI;
 
 public abstract class BuildingBase : MonoBehaviour, IDamageable
 {
     public int maxHealth = 100;
     public int currentHealth;
-    public Unit.Team team = Unit.Team.Player; // ⬅️ إضافة الفريق
+    public Unit.Team team = Unit.Team.Player; //  إضافة الفريق
 
     public bool isSelected;
     [Header("UI References")]
-    public GameObject healthBarContainer; // ⬅️ الحاوية
+    public GameObject healthBarContainer; // 
     public Image healthBarFill;
     public string buildingName;
     public int constructionCost;
@@ -21,7 +21,7 @@ public abstract class BuildingBase : MonoBehaviour, IDamageable
     public Transform GetTransform() { return transform; }
     public bool IsAlive() { return currentHealth > 0; }
     public float GetRadius() { return 2.0f; } // قيمة تقريبية لحجم المبنى
-    public Collider GetCollider() { return _collider; } // 🛡️ Return cached collider
+    public Collider GetCollider() { return _collider; } //  Return cached collider
 
     protected Collider _collider;
 
@@ -32,7 +32,7 @@ public abstract class BuildingBase : MonoBehaviour, IDamageable
 
     protected virtual void Awake()
     {
-        _collider = GetComponent<Collider>(); // 🛡️ Cache Cache Cache
+        _collider = GetComponent<Collider>(); // Cache
         currentHealth = maxHealth;
         UpdateHealthBarVisibility();
     }

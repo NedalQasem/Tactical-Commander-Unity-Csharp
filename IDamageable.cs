@@ -6,6 +6,6 @@ public interface IDamageable
     Transform GetTransform();
     void TakeDamage(int amount);
     bool IsAlive();
-    float GetRadius(); // لحساب المسافة بشكل أدق (للمباني الكبيرة)
-    Collider GetCollider(); // 🛡️ للتعامل مع "سطح" المبنى وليس المركزه
+    float GetRadius(); 
+    Collider GetCollider();
 }
