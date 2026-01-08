@@ -14,7 +14,8 @@ public class UnitState_Chase : IUnitState
     public void Enter(Unit unit)
     {
         this.unit = unit;
-        if (target != null && unit.IsAgentReady)
+        // ⚠️ Fix: Same safety check for Enter logic
+        if (target != null && (target as UnityEngine.Object) != null && unit.IsAgentReady)
         {
             unit.agent.isStopped = false;
             unit.agent.stoppingDistance = 0f; // 🛑 Force stop manual control
@@ -25,7 +26,10 @@ public class UnitState_Chase : IUnitState
     public void Update(Unit unit)
     {
         // 1. Validate Target
-        if (target == null || !target.IsAlive())
+        // 1. Validate Target
+        // ⚠️ Fix: IDamageable is an interface. Standard (target == null) checks the C# wrapper, not Unity Object life.
+        // We MUST cast to UnityEngine.Object to let Unity's "Magic Null" work for destroyed objects.
+        if (target == null || (target as UnityEngine.Object) == null || !target.IsAlive())
         {
             unit.target = null;
             unit.stateMachine.ChangeState(new UnitState_Idle());

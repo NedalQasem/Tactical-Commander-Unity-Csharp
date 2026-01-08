@@ -24,23 +24,35 @@ public class EnemyAIController : MonoBehaviour
     private List<Unit> myArmy = new List<Unit>();
     private float decisionTimer = 0f;
 
+    private float incomeTimer = 0f;
+
+    void Start()
+    {
+        // ⚖️ Fair Start: Reset gold to 100 ensuring Inspector didn't save a high value
+        currentGold = 100;
+        
+        // Prevent accidental high income rates from Inspector overrides
+        goldIncomeRate = 0f; 
+    }
+
     void Update()
     {
-        // 1. زيادة الذهب بناءً على المناجم
-        // الدخل الأساسي (قليل جداً) + دخل المناجم
-        float baseIncome = 1.0f; // 1 ذهب في الثانية
-        float minesIncome = CountBuildings("Mine") * 5.0f; // كل منجم يعطي 5 ذهب/ثانية
-        
-        float totalRate = baseIncome + minesIncome;
-        
-        // نستخدم متغير كسري (float) لتجميع الذهب بمرور الوقت
-        // نحتاج لمتغير خاص لتخزين الكسور (سأضيفه الآن كحقل خاص)
-        accumulator += totalRate * Time.deltaTime;
-        if (accumulator >= 1.0f)
+        // 💰 Income Logic: 10 Gold every 5 Seconds
+        incomeTimer += Time.deltaTime;
+        if (incomeTimer >= 5.0f)
         {
-            int gain = (int)accumulator;
-            currentGold += gain;
-            accumulator -= gain;
+            currentGold += 10;
+            
+            // Optional: Extra income from mines?
+            // User requested "10 every 5 seconds", likely base.
+            // Let's keep mines relevant but balanced. 5 gold per mine every 5 seconds?
+            int mineCount = CountBuildings("Mine");
+            if (mineCount > 0)
+            {
+                currentGold += mineCount * 5; 
+            }
+            
+            incomeTimer = 0f;
         }
 
         decisionTimer += Time.deltaTime;
@@ -109,29 +121,56 @@ public class EnemyAIController : MonoBehaviour
     {
         if (unitPrefabs == null || unitPrefabs.Count == 0) return;
 
-        // ابحث عن ثكنة
+        // 1. Find a Barracks
+        GameObject barracks = null;
         foreach(var b in myBuildings)
         {
-            if (b.name.Contains("Barracks")) 
+            if (b != null && b.name.Contains("Barracks")) 
             {
-                currentGold -= 10;
-                
-                // اختيار جندي عشوائي من القائمة 🎲
-                GameObject randomUnitPrefab = unitPrefabs[Random.Range(0, unitPrefabs.Count)];
-
-                // إنشاء الجندي بجانب الثكنة
-                Vector3 spawnPos = b.transform.position + Vector3.forward * 2;
-                GameObject u = Instantiate(randomUnitPrefab, spawnPos, Quaternion.identity);
-                
-                Unit unitScript = u.GetComponent<Unit>();
-                if (unitScript != null)
-                {
-                    unitScript.team = Unit.Team.Enemy; // 🔴 تعيين الفريق عدو
-                    myArmy.Add(unitScript);
-                }
-                Debug.Log($"😈 Enemy Trained Unit: {u.name}");
-                break; 
+                barracks = b;
+                break;
             }
+        }
+
+        if (barracks == null) return;
+
+        // 2. Filter Affordable Units
+        List<GameObject> affordableUnits = new List<GameObject>();
+        foreach(var prefab in unitPrefabs)
+        {
+            if (prefab == null) continue;
+            Unit unitScript = prefab.GetComponent<Unit>();
+            if (unitScript != null && unitScript.data != null)
+            {
+                if (currentGold >= unitScript.data.goldCost)
+                {
+                    affordableUnits.Add(prefab);
+                }
+            }
+        }
+
+        // 3. Buy a unit if possible
+        if (affordableUnits.Count > 0)
+        {
+            // Pick random affordable unit
+            GameObject chosenPrefab = affordableUnits[Random.Range(0, affordableUnits.Count)];
+            Unit unitDataScript = chosenPrefab.GetComponent<Unit>();
+            int cost = unitDataScript.data.goldCost;
+
+            // Pay the price 💰
+            currentGold -= cost;
+
+            // Spawn
+            Vector3 spawnPos = barracks.transform.position + Vector3.forward * 2;
+            GameObject u = Instantiate(chosenPrefab, spawnPos, Quaternion.identity);
+            
+            Unit newUnitScript = u.GetComponent<Unit>();
+            if (newUnitScript != null)
+            {
+                newUnitScript.team = Unit.Team.Enemy; // 🔴 Assign Team Enemy
+                myArmy.Add(newUnitScript);
+            }
+            Debug.Log($"😈 Enemy Paid {cost} Gold to Train: {u.name}");
         }
     }
 
@@ -153,6 +192,9 @@ public class EnemyAIController : MonoBehaviour
     // 👷‍♂️ البحث عن أرض فارغة وصالحة للبناء
     Vector3 FindBuildPosition()
     {
+        // 🔒 Safety Check: If Base is destroyed, we can't calculate position relative to it
+        if (enemyBaseCenter == null) return Vector3.zero;
+
         // Safety: If buildRadius is too small, default it
         float searchRadius = Mathf.Max(buildRadius, 10f);
 

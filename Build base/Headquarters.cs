@@ -16,15 +16,25 @@ public class Headquarters : BuildingBase
     {
         Debug.Log($"🚨 كارثة! تم تدمير المقر الرئيسي للفريق: {team}");
         
+        // 🔍 Robust GameManager Lookup
+        GameManager gm = GameManager.Instance;
+        if (gm == null)
+        {
+            gm = FindFirstObjectByType<GameManager>();
+            if (gm != null) Debug.Log("⚠️ Headquarters: Found GameManager via fallback search (Instance was null).");
+        }
+
         if (team == Unit.Team.Player)
         {
             Debug.Log("❌ GAME OVER - YOU LOST");
-            // هنا نستدعي GameManager.LoseGame()
+            if (gm != null) gm.EndGame(false);
+            else Debug.LogError("❌ Headquarters: Cannot trigger Defeat - GameManager Instance is MISSING!");
         }
         else
         {
             Debug.Log("🏆 VICTORY - ENEMY DESTROYED");
-            // هنا نستدعي GameManager.WinGame()
+            if (gm != null) gm.EndGame(true);
+            else Debug.LogError("❌ Headquarters: Cannot trigger Victory - GameManager Instance is MISSING!");
         }
 
         base.Die();

@@ -57,7 +57,7 @@ public class PlacementManager : MonoBehaviour
 
     // --- Box Selection Variables ---
     private Vector2 dragStartPos;
-    private bool isDragging = false;
+
     private Texture2D whiteTexture; 
 
     private void Start() 
