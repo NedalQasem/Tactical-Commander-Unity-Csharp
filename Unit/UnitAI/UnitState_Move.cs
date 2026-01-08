@@ -20,14 +20,18 @@ public class UnitState_Move : IUnitState
 
     public void Update(Unit unit)
     {
-        // 🛡️ Attack Move Check: While moving, scan for enemies
-        if (unit.FindClosestEnemy())
+        // 🛡️ Conditional Logic:
+        // Player: Standard Move (Disengage/Ignore enemies)
+        // Enemy: Attack Move (Aggressive - Attack if they see someone)
+        if (unit.team == Unit.Team.Enemy)
         {
-            // Bug Fix: Was passing 'unit' (self) instead of 'unit.target' (enemy)
-            if (unit.target != null)
+            if (unit.FindClosestEnemy())
             {
-                unit.stateMachine.ChangeState(new UnitState_Chase(unit.target));
-                return;
+                if (unit.target != null)
+                {
+                    unit.stateMachine.ChangeState(new UnitState_Chase(unit.target));
+                    return;
+                }
             }
         }
 

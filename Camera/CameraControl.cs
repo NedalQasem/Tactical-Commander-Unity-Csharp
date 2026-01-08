@@ -78,9 +78,12 @@ public class CameraControl : MonoBehaviour
         if (found)
         {
             // Apply Offset
+            // User Request: Camera Direction on X-Axis at Start
+            // Means we look ALONG X. Position needs to be offset on X, centered on Z.
             targetPos.y = transform.position.y;
-            targetPos.z -= 15f; // Pull back slightly more
-            targetPos.x -= 0f;  // Keep X centered
+            targetPos.x -= 20f; // Pull back along X-axis
+            // targetPos.z is already the target's Z (centered)
+
             
             // Clamp to boundaries if valid
             if (useBoundaries)
@@ -90,6 +93,9 @@ public class CameraControl : MonoBehaviour
             }
 
             transform.position = targetPos;
+            
+            // 🔄 Rotate Camera to Face Right (+X axis)
+            transform.rotation = Quaternion.Euler(60f, 90f, 0f); // 60 degree tilt, 90 degree Y rotation
         }
         else
         {

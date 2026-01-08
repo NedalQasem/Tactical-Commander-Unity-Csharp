@@ -128,8 +128,28 @@ public class SelectionManager : MonoBehaviour
 
             if (selectedUnits.Count > 0)
             {
-                // أمان: إذا كان المختار عدواً (بالنقر الفردي)، لا نحركه
+                // Safety: Do not command Enemy units
                 if (selectedUnits[0].team != Unit.Team.Player) return;
+
+                // ⚔️ FORCE ATTACK LOGIC
+                // Check if we clicked on an Enemy (Unit or Building)
+                IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
+                if (target != null && target.GetTeam() != Unit.Team.Player && target.IsAlive())
+                {
+                    // Order all selected units to ATTACK this specific target
+                    foreach (Unit u in selectedUnits)
+                    {
+                        if (u != null)
+                        {
+                            u.target = target;
+                             // Uses Chase state to move into range then attack
+                            u.stateMachine.ChangeState(new UnitState_Chase(target));
+                        }
+                    }
+                    // Visualization for the user
+                    // Instantiate(attackMarkerPrefab, hit.point, ...) // Future Polish
+                    return; // 🛑 Stop here! Do not execute move logic.
+                }
 
                 // 🔥 ترتيب الجنود: Melee أولاً، ثم Swordsman، ثم Archer
                 selectedUnits.Sort((a, b) => {
