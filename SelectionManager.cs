@@ -121,6 +121,9 @@ public class SelectionManager : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
         {
             // 1. Move Units with Formation
+            // 🧹 Cleanup: Remove dead units first
+            selectedUnits.RemoveAll(u => u == null);
+
             if (selectedUnits.Count > 0)
             {
                 // أمان: إذا كان المختار عدواً (بالنقر الفردي)، لا نحركه

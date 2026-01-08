@@ -24,6 +24,7 @@ public class UnitData : ScriptableObject
     public GameObject projectilePrefab; // للرماة فقط: ضع سهم هنا
     public float attackRange;
     public float attackRate = 1.0f; // سرعة الهجوم (بالثواني بين الضربات)
+    public float visionRange = 8.0f; // مدى الرؤية للاستهداف التلقائي
 
     [Header("Balancing")]
     public float damageMultiplier = 1.0f; // لتسهيل موازنة الضرر لاحقاً

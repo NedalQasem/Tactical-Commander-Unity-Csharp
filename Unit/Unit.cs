@@ -3,7 +3,7 @@ using UnityEngine.AI;
 using System.Collections;
 using UnityEngine.UI;
 
-public class Unit : MonoBehaviour, IDamageable
+public abstract class Unit : MonoBehaviour, IDamageable
 {
     [Header("Data Reference")]
     public UnitData data;
@@ -21,7 +21,6 @@ public class Unit : MonoBehaviour, IDamageable
     [HideInInspector] public UnitAnimation unitAnimation;
 
     [Header("Combat Settings")]
-    public Transform firePoint;
     public float visionRange = 10f;
     public IDamageable target;
     public UnitStateMachine stateMachine;
@@ -32,7 +31,11 @@ public class Unit : MonoBehaviour, IDamageable
     // 🛡️ Helper Property for Safe Agent Access
     public bool IsAgentReady => agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh;
 
-    private void Awake()
+    // --- Abstract Methods for Subclasses ---
+    public abstract void TryAttack(IDamageable target);
+    public abstract float GetAttackRange(IDamageable target);
+
+    protected virtual void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         unitAnimation = GetComponent<UnitAnimation>();
@@ -48,7 +51,7 @@ public class Unit : MonoBehaviour, IDamageable
         if (healthBarObject != null) healthBarObject.SetActive(false);
     }
 
-    IEnumerator Start()
+    protected virtual IEnumerator Start()
     {
         // Wait one frame to ensure NavMeshAgent is placed on the NavMesh
         yield return null;
@@ -60,7 +63,7 @@ public class Unit : MonoBehaviour, IDamageable
         stateMachine.Initialize(new UnitState_Idle());
     }
 
-    private void Update()
+    protected virtual void Update()
     {
         if (stateMachine != null) stateMachine.Update();
     }
@@ -126,6 +129,23 @@ public class Unit : MonoBehaviour, IDamageable
     public float GetRadius() { return agent != null ? agent.radius : 0.5f; }
     public Collider GetCollider() { return GetComponent<Collider>(); } // 🛡️ Simple implementation for Unit
 
+    // 🎯 Auto-Targeting Helper
+    public IDamageable ScanForEnemies(float range)
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, range);
+        foreach (var hit in hits)
+        {
+            // 🛡️ Use GetComponentInParent just in case collider is on a child mesh
+            IDamageable d = hit.GetComponentInParent<IDamageable>();
+            // 🛡️ Safety Check: Ensure the object isn't destroyed
+            if ((d as UnityEngine.Object) != null && d != null && d.GetTeam() != team && d.IsAlive())
+            {
+                return d; // Found an enemy!
+            }
+        }
+        return null; // No enemies in range
+    }
+
     public void TakeDamage(int amount)
     {
         currentHP -= amount;
@@ -142,7 +162,7 @@ public class Unit : MonoBehaviour, IDamageable
         }
     }
 
-    void Die()
+    protected virtual void Die()
     {
         // Add death logic later (animation, pool return, etc)
         Destroy(gameObject);
@@ -157,9 +177,13 @@ public class Unit : MonoBehaviour, IDamageable
 
         foreach (Collider hit in hits)
         {
-            IDamageable potentialTarget = hit.GetComponent<IDamageable>();
+            IDamageable potentialTarget = hit.GetComponentInParent<IDamageable>();
             
-            if (potentialTarget != null && potentialTarget.GetTeam() != this.team && potentialTarget.IsAlive())
+            // 🛡️ Safety Check: Ensure the object isn't destroyed
+            if ((potentialTarget as UnityEngine.Object) != null && 
+                potentialTarget != null && 
+                potentialTarget.GetTeam() != this.team && 
+                potentialTarget.IsAlive())
             {
                 float dist = Vector3.Distance(transform.position, potentialTarget.GetTransform().position);
                 if (dist < closestDist)
@@ -179,11 +203,11 @@ public class Unit : MonoBehaviour, IDamageable
     }
 
     // --- Gizmos for Debugging ---
-    private void OnDrawGizmosSelected()
+    protected virtual void OnDrawGizmosSelected()
     {
         if (data != null)
         {
-            // Attack Range (Red)
+            // Attack Range (Red) - using property might not work in editor if not initialized, usage cautious
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, data.attackRange);
         }

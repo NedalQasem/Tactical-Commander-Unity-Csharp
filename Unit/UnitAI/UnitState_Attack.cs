@@ -19,9 +19,23 @@ public class UnitState_Attack : IUnitState
 
     public void Update(Unit unit)
     {
-        if (target == null || !target.IsAlive())
+        // 🛡️ Robust Target Validation
+        // We cast to UnityEngine.Object to ensure we catch destroyed objects correctly
+        if ((target as UnityEngine.Object) == null || !target.IsAlive())
         {
-            unit.stateMachine.ChangeState(new UnitState_Idle());
+            // 🎯 Target Switching: Look for next enemy
+            // Use the unit's inspector vision range to be consistent with Idle state
+            float visionRange = unit.visionRange; 
+            IDamageable newTarget = unit.ScanForEnemies(visionRange);
+            
+            if (newTarget != null)
+            {
+                unit.stateMachine.ChangeState(new UnitState_Chase(newTarget));
+            }
+            else
+            {
+                unit.stateMachine.ChangeState(new UnitState_Idle());
+            }
             return;
         }
 
@@ -33,67 +47,29 @@ public class UnitState_Attack : IUnitState
             unit.transform.rotation = Quaternion.Slerp(unit.transform.rotation, lookRotation, Time.deltaTime * 5f);
         }
 
-        bool isMelee = (unit.data != null && unit.data.attackType == UnitData.AttackType.Melee);
-        
-        if (isMelee)
-        {
-            HandleMeleeCombat(unit);
-        }
-        else
-        {
-            HandleRangedCombat(unit);
-        }
-    }
+        // 📏 Check Distance to stay in state
+        float range = unit.GetAttackRange(target);
+        float currentDist = GetSurfaceDistance(unit, target);
 
-    // ⚔️ Strict Melee Logic
-    private void HandleMeleeCombat(Unit unit)
-    {
-        float surfaceDist = GetSurfaceDistance(unit, target);
-        
-        // Exit Condition: If we drifted away more than a tiny bit, RE-CHASE
-        if (surfaceDist > 0.5f) 
+        // Exit Condition: If we drifted significantly away, RE-CHASE
+        // We add a small buffer (0.5f) to prevent jittering at the exact boundary
+        if (currentDist > range + 0.5f)
         {
             unit.stateMachine.ChangeState(new UnitState_Chase(target));
             return;
         }
 
-        // Attack Logic
+        // ⚔️ Perform Attack
         attackTimer += Time.deltaTime;
         float attackRate = (unit.data != null) ? unit.data.attackRate : 1.5f;
 
         if (attackTimer >= attackRate)
         {
-            // 🔒 ZERO DISTANCE ENFORCEMENT
-            // Only deal damage if we are virtually touching
-            if (surfaceDist <= 0.3f) 
-            {
-                PerformMeleeAttack(unit);
-                attackTimer = 0f;
-            }
-        }
-    }
-
-    // 🏹 Standard Ranged Logic
-    private void HandleRangedCombat(Unit unit)
-    {
-        float surfaceDist = GetSurfaceDistance(unit, target);
-        float range = (unit.data != null) ? unit.data.attackRange : 5.0f;
-
-        // Exit Condition
-        if (surfaceDist > range + 0.5f)
-        {
-            unit.stateMachine.ChangeState(new UnitState_Chase(target));
-            return;
-        }
-
-        // Fire Logic
-        attackTimer += Time.deltaTime;
-        float attackRate = (unit.data != null) ? unit.data.attackRate : 1.5f;
-
-        if (attackTimer >= attackRate)
-        {
-            PerformRangedAttack(unit);
+            // Reset timer and Attack
+            // We removed the strict inner check to prevent the "Frozen Unit" bug.
+            // If the unit is close enough to stay in this state (checked above), it's close enough to attack.
             attackTimer = 0f;
+            unit.TryAttack(target);
         }
     }
 
@@ -111,29 +87,9 @@ public class UnitState_Attack : IUnitState
         return Mathf.Max(0, d - target.GetRadius());
     }
 
-    private void PerformMeleeAttack(Unit unit)
-    {
-        if (unit.unitAnimation != null) unit.unitAnimation.PlayAttack();
-        int dmg = (unit.data != null) ? unit.data.attackDamage : 10;
-        target.TakeDamage(dmg);
-    }
-
-    private void PerformRangedAttack(Unit unit)
-    {
-        if (unit.unitAnimation != null) unit.unitAnimation.PlayAttack();
-        int dmg = (unit.data != null) ? unit.data.attackDamage : 10;
-
-        if (unit.data != null && unit.data.projectilePrefab != null)
-        {
-            Transform spawnPoint = (unit.firePoint != null) ? unit.firePoint : unit.transform;
-            GameObject projObj = Object.Instantiate(unit.data.projectilePrefab, spawnPoint.position, spawnPoint.rotation);
-            Projectile projectile = projObj.GetComponent<Projectile>();
-            if (projectile != null) projectile.Setup(target, dmg, unit.team);
-        }
-    }
-
     public void Exit(Unit unit)
     {
         // No distinct exit logic needed yet
     }
 }
+

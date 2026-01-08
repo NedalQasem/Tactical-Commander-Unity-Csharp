@@ -40,38 +40,16 @@ public class UnitState_Chase : IUnitState
             updateTimer = 0f;
         }
 
-        // 3. Logic Split: Melee vs Ranged
-        float attackRange = (unit.data != null) ? unit.data.attackRange : 2.0f;
-        bool isMelee = (unit.data != null && unit.data.attackType == UnitData.AttackType.Melee);
+        // 3. Check Distance using Abstract Method
+        // This works for both Melee (Physical Contact) and Ranged (Attack Range)
+        float goalDist = unit.GetAttackRange(target);
+        
+        // Calculate Distance
+        // Note: For Melee, GetAttackRange includes Collider sizes, so we need consistent distance check
+        // Ideally, we use Surface Distance for everything to be accurate
+        float currentDist = GetSurfaceDistance(unit, target);
 
-        // Calculate Surface Distance
-        float dist;
-        Collider targetCol = target.GetCollider();
-        if (targetCol != null)
-        {
-            Vector3 closestPoint = targetCol.ClosestPoint(unit.transform.position);
-            dist = Vector3.Distance(unit.transform.position, closestPoint);
-        }
-        else
-        {
-            dist = Vector3.Distance(unit.transform.position, target.GetTransform().position);
-            dist -= target.GetRadius();
-        }
-
-        // 🛑 Decide Goal Distance
-        float goalDist;
-        if (isMelee)
-        {
-            // Melee: ZERO distance. Touch the collider.
-            goalDist = 0.2f; // Small epsilon for float errors
-        }
-        else
-        {
-            // Ranged: Respect attack range
-            goalDist = attackRange;
-        }
-
-        if (dist <= goalDist)
+        if (currentDist <= goalDist)
         {
             unit.stateMachine.ChangeState(new UnitState_Attack(target));
         }
@@ -86,4 +64,19 @@ public class UnitState_Chase : IUnitState
     {
         if (unit.IsAgentReady) unit.agent.isStopped = true;
     }
+
+    private float GetSurfaceDistance(Unit unit, IDamageable target)
+    {
+        // If MeleeUnit uses surface logic, we should use it here too
+        Collider targetCol = target.GetCollider();
+        if (targetCol != null)
+        {
+            Vector3 closestPoint = targetCol.ClosestPoint(unit.transform.position);
+            return Vector3.Distance(unit.transform.position, closestPoint);
+        }
+        
+        // Fallback for objects without cached colliders
+        return Vector3.Distance(unit.transform.position, target.GetTransform().position) - target.GetRadius();
+    }
 }
+
