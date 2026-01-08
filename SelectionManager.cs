@@ -118,7 +118,9 @@ public class SelectionManager : MonoBehaviour
     void HandleRightClick()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 1000f, groundMask))
+        // 🛠️ Fix: Relaxed Raycast to hit Ground OR Default (in case mask is wrong)
+        // Using "Physics.DefaultRaycastLayers" or just no mask if we trust the scene
+        if (Physics.Raycast(ray, out RaycastHit hit, 1000f)) // Removed specific groundMask constraint for robustness
         {
             // 1. Move Units with Formation
             // 🧹 Cleanup: Remove dead units first
@@ -163,12 +165,20 @@ public class SelectionManager : MonoBehaviour
             // 2. Set Rally Point
             else if (selectedBuilding != null && selectedBuilding is Barracks barracks)
             {
-                 if (barracks.rallyPoint != null) barracks.rallyPoint.position = hit.point;
+                 // Move existing rally point logic
+                 if (barracks.rallyPoint != null) 
+                 {
+                     barracks.rallyPoint.position = hit.point;
+                 }
                  
+                 // Handle Visuals & Auto-Assign
                  if (barracks.visualRallyPoint != null)
                  {
                      barracks.visualRallyPoint.transform.position = hit.point + Vector3.up * 1.0f;
                      if (!barracks.visualRallyPoint.activeSelf) barracks.visualRallyPoint.SetActive(true);
+                     
+                     // 🛠️ Fix: Ensure logical rally point is linked to visual
+                     if (barracks.rallyPoint == null) barracks.rallyPoint = barracks.visualRallyPoint.transform;
                  }
                  else if (rallyPointPrefab != null)
                  {
@@ -180,6 +190,9 @@ public class SelectionManager : MonoBehaviour
                       if (floater != null) Destroy(floater);
                       
                       barracks.visualRallyPoint = newRallyPoint;
+                      
+                      // 🛠️ Fix: Link logical rally point
+                      barracks.rallyPoint = newRallyPoint.transform;
                  }
             }
         }
@@ -213,8 +226,19 @@ public class SelectionManager : MonoBehaviour
         building.isSelected = true;
         building.UpdateHealthBarVisibility();
         
-        // Update UI via PlacementManager
-        if (placementManager != null) placementManager.UpdateSelectionUI(building);
+        // 🔒 Security: Only show Control UI for Player buildings
+        if (placementManager != null)
+        {
+            if (building.team == Unit.Team.Player)
+            {
+                placementManager.UpdateSelectionUI(building);
+            }
+            else
+            {
+                // Inspecting enemy building? ensuring no buttons are shown
+                placementManager.ClearSelectionUI();
+            }
+        }
     }
 
     public void DeselectAll()
