@@ -3,17 +3,34 @@ using TMPro;
 
 public class ResourceManager : MonoBehaviour
 {
-    public static ResourceManager Instance;
+    public static ResourceManager Instance; // Player's Resource Manager
+
+    [Header("Settings")]
+    public Unit.Team team = Unit.Team.Player;
 
     [Header("Resources")]
-    public int currentGold = 100;
+    [SerializeField] private int currentGold = 100;
     public TextMeshProUGUI goldDisplayText;
 
     private void Awake()
     {
-        // Singleton Setup
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        // Auto-detect if attached to Enemy AI
+        if (GetComponent<EnemyAIController>() != null)
+        {
+            team = Unit.Team.Enemy;
+        }
+
+        // Singleton Setup ONLY for Player
+        if (team == Unit.Team.Player)
+        {
+            if (Instance == null) Instance = this;
+            else 
+            {
+                Debug.LogWarning("Duplicate Player ResourceManager found. Destroying.");
+                Destroy(gameObject);
+                return;
+            }
+        }
         
         UpdateGoldUI();
     }
@@ -42,9 +59,11 @@ public class ResourceManager : MonoBehaviour
 
     private void UpdateGoldUI()
     {
-        if (goldDisplayText != null)
+        // Only update UI for the Player
+        if (team == Unit.Team.Player && goldDisplayText != null)
         {
             goldDisplayText.text = "Gold: " + currentGold;
         }
     }
 }
+

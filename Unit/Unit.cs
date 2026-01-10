@@ -24,6 +24,7 @@ public abstract class Unit : MonoBehaviour, IDamageable
     public float visionRange = 10f;
     public IDamageable target;
     public UnitStateMachine stateMachine;
+    public bool isPassive = false; // If true, unit will not auto-aggro
 
     public string unitName => data != null ? data.unitName : "Unknown Unit";
     public int maxHP => data != null ? data.maxHealth : 100;

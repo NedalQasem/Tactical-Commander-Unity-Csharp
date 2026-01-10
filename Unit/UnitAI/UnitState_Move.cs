@@ -20,7 +20,8 @@ public class UnitState_Move : IUnitState
 
     public void Update(Unit unit)
     {
-        if (unit.team == Unit.Team.Enemy)
+        // Allow auto-aggro for all non-passive units during movement
+        if (!unit.isPassive)
         {
             if (unit.FindClosestEnemy())
             {

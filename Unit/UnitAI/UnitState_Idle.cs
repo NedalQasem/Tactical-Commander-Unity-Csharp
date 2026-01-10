@@ -17,7 +17,7 @@ public class UnitState_Idle : IUnitState
         detectionTimer += Time.deltaTime;
         if (detectionTimer > 0.5f) 
         {
-            if (unit.FindClosestEnemy())
+            if (!unit.isPassive && unit.FindClosestEnemy())
             {
                 unit.stateMachine.ChangeState(new UnitState_Chase(unit.target));
             }

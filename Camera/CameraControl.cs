@@ -151,8 +151,9 @@ public class CameraControl : MonoBehaviour
             // Calculate screen delta
             Vector3 delta = Input.mousePosition - lastMousePos;
                         
-            // Sensitivity Factor
-            float speed = dragSpeed * 0.05f * (transform.position.y / 10f); // Scale with Zoom height
+            // Sensitivity Factor - Tuned down for better control
+            float heightFactor = Mathf.Clamp(transform.position.y / 10f, 0.5f, 3.0f); // Normalize height influence
+            float speed = dragSpeed * 0.02f * heightFactor; 
 
             Vector3 dragMove = -right * delta.x * speed;
             dragMove += -forward * delta.y * speed;

@@ -12,24 +12,24 @@ public class FormationGhost : PlacementGhost
 
     public void Setup(GameObject prefab, List<Vector3> offsets, Material mat)
     {
-        void Start()
-        {
-            textMesh = GetComponentInChildren<TextMeshProUGUI>();
-            if (textMesh != null)
-            {
-                startColor = textMesh.color;
-            }
-            Destroy(gameObject, duration);
-        }
-
         foreach (var offset in offsets)
         {
             GameObject child = Instantiate(prefab, transform);
             child.transform.localPosition = offset;
-            // ����� ������
+            //  
             Destroy(child.GetComponent<UnityEngine.AI.NavMeshAgent>());
         }
         base.Initialize(mat);
+    }
+
+    void Start()
+    {
+        textMesh = GetComponentInChildren<TextMeshProUGUI>();
+        if (textMesh != null)
+        {
+            startColor = textMesh.color;
+        }
+        Destroy(gameObject, duration);
     }
 
     void Update()

@@ -66,14 +66,26 @@ public class Barracks : BuildingBase
             if (unitScript != null)
             {
                 unitScript.data = currentUnit;
-                // Move to rally point if set
-                if (rallyPoint != null)
-                {
-                    unitScript.MoveTo(rallyPoint.position);
-                }
+                unitScript.team = this.team; // Ensure team inheritance
+
+                // Default Rally Point Logic
+                Vector3 targetPos = spawnPoint.position + spawnPoint.forward * 5f;
+                if (rallyPoint != null) targetPos = rallyPoint.position;
+
+                // Move after a short delay to ensure NavMeshAgent is bound
+                StartCoroutine(MoveUnitAfterSpawn(unitScript, targetPos));
                 
                 if (AudioManager.Instance != null) AudioManager.Instance.PlaySFXAt(SoundType.UnitSpawn, spawnPoint.position);
             }
+        }
+    }
+
+    private System.Collections.IEnumerator MoveUnitAfterSpawn(Unit unit, Vector3 destination)
+    {
+        yield return null; // Wait 1 frame for Awake/Start and NavMesh binding
+        if (unit != null)
+        {
+            unit.MoveTo(destination);
         }
     }
 
