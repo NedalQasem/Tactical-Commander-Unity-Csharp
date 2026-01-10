@@ -13,6 +13,26 @@ public class Barracks : BuildingBase
     private bool isTraining = false;
     private UnitData currentUnit;
 
+    protected override void Awake()
+    {
+        base.Awake();
+        
+        // 🛠️ Auto-Fix: If user assigned a Prefab to visualRallyPoint, instantiate it!
+        if (visualRallyPoint != null && !visualRallyPoint.scene.IsValid())
+        {
+            GameObject prefab = visualRallyPoint;
+            visualRallyPoint = Instantiate(prefab, transform.position, Quaternion.identity);
+            visualRallyPoint.name = $"{buildingName}_RallyPoint";
+            visualRallyPoint.SetActive(false);
+            
+            // If rallyPoint was pointing to the prefab's transform, update it
+            if (rallyPoint != null && !rallyPoint.gameObject.scene.IsValid())
+            {
+                rallyPoint = visualRallyPoint.transform;
+            }
+        }
+    }
+
     void Update()
     {
         if (!isPlaced) return;
@@ -82,10 +102,25 @@ public class Barracks : BuildingBase
 
     private System.Collections.IEnumerator MoveUnitAfterSpawn(Unit unit, Vector3 destination)
     {
-        yield return null; // Wait 1 frame for Awake/Start and NavMesh binding
-        if (unit != null)
+        // Wait for NavMeshAgent to initialize
+        yield return new WaitForEndOfFrame(); 
+
+        if (unit != null && unit.agent != null)
         {
-            unit.MoveTo(destination);
+            // Ensure unit is on NavMesh
+            UnityEngine.AI.NavMeshHit hit;
+            if (UnityEngine.AI.NavMesh.SamplePosition(unit.transform.position, out hit, 2.0f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                unit.agent.Warp(hit.position);
+            }
+            
+            // Wait one more physics frame for Warp to take effect
+            yield return new WaitForFixedUpdate();
+
+            if (unit.IsAgentReady)
+            {
+                unit.MoveTo(destination);
+            }
         }
     }
 

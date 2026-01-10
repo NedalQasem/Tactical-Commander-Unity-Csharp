@@ -181,10 +181,21 @@ public class SelectionManager : MonoBehaviour
                      
                      if (barracks.rallyPoint == null) barracks.rallyPoint = barracks.visualRallyPoint.transform;
                  }
-                 else if (rallyPointPrefab != null)
+                 else
                  {
-                      GameObject newRallyPoint = Instantiate(rallyPointPrefab, hit.point + Vector3.up * 0.5f, Quaternion.identity);
-                      newRallyPoint.transform.localScale = Vector3.one; 
+                      GameObject newRallyPoint;
+                      if (rallyPointPrefab != null)
+                      {
+                          newRallyPoint = Instantiate(rallyPointPrefab, hit.point + Vector3.up * 0.5f, Quaternion.identity);
+                          newRallyPoint.transform.localScale = Vector3.one; 
+                      }
+                      else
+                      {
+                          // Fallback: Create a simple object if no prefab is assigned
+                          newRallyPoint = new GameObject("RallyPoint");
+                          newRallyPoint.transform.position = hit.point;
+                      }
+                      
                       newRallyPoint.SetActive(true);
                       
                       var floater = newRallyPoint.GetComponent<FloatingText>();
